@@ -4,6 +4,7 @@ import { createFields } from "../features/fields";
 import { createWarehouse } from "../features/warehouse";
 import { createWorkshop } from "../features/workshop";
 import { createOrders, salePrice } from "../features/orders";
+import { createIrrigation } from "../features/irrigation";
 import { items } from "../shared/catalog";
 import { saveFarm, loadFarm } from "./persistence";
 export function createWorkspace() {
@@ -14,6 +15,7 @@ export function createWorkspace() {
   const clock = createClock();
   const warehouse = createWarehouse(() => clock.state.hour, notice);
   const orders = createOrders(warehouse, notice, clock.state.hour);
+  const irrigation = createIrrigation(orders.spend, notice);
   const fields = createFields(orders.spend, warehouse.add, notice);
   const workshop = createWorkshop(
     { ...warehouse, spend: orders.spend },
@@ -24,7 +26,12 @@ export function createWorkspace() {
     clock.setHour,
     (t) => {
       warehouse.tick(t.to);
-      fields.tick(t);
+      // 有限水量先按渠网与优先级逐小时分配，再按实得水结算作物生长
+      const flow = irrigation.tick(
+        t,
+        (plotId) => !!fields.state.plots[plotId]?.crop,
+      );
+      fields.tick(t, flow.distribution);
       workshop.tick(t.to);
       orders.tick(t.to);
     },
@@ -35,6 +42,7 @@ export function createWorkspace() {
     fields: fields.snapshot(),
     workshop: workshop.snapshot(),
     orders: orders.snapshot(),
+    irrigation: irrigation.snapshot(),
   });
   return {
     clock,
@@ -42,6 +50,7 @@ export function createWorkspace() {
     fields,
     workshop,
     orders,
+    irrigation,
     engine,
     notices,
     sell(id: string) {
@@ -54,7 +63,7 @@ export function createWorkspace() {
     save() {
       try {
         saveFarm(snapshot());
-        notice("已保存到本机");
+        notice("已保存到本机：渠网、剩余水量与已安装水泵一并存档");
       } catch {
         notice("保存失败，本机空间不足");
       }
@@ -71,7 +80,8 @@ export function createWorkspace() {
         fields.restore(data.fields);
         workshop.restore(data.workshop);
         orders.restore(data.orders);
-        notice("已恢复保存时刻");
+        if (data.irrigation) irrigation.restore(data.irrigation);
+        notice("已恢复保存时刻，渠网与蓄水状态原样回来");
       } catch {
         notice("存档损坏，无法恢复");
       }

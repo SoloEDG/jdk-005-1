@@ -1,6 +1,6 @@
 import { reactive, readonly } from "vue";
 import type { Item, Plot, Tick, Notice } from "../../../shared/contracts";
-import { crops, grow, ready } from "../lib/crops";
+import { crops, grow, growWithSupply, ready } from "../lib/crops";
 export function createFields(
   spend: (amount: number) => boolean,
   harvest: (item: Item, n: number, q: number) => void,
@@ -49,10 +49,17 @@ export function createFields(
       } else plot.crop = null;
       notice("收获已按品质分批入仓");
     },
-    tick(tick: Tick) {
+    tick(tick: Tick, flow?: ReadonlyMap<number, number>) {
       for (const plot of state.plots)
         if (plot.crop)
-          plot.crop = grow(plot.crop, tick.weather, tick.to - tick.from);
+          plot.crop = flow
+            ? growWithSupply(
+                plot.crop,
+                tick.weather,
+                tick.to - tick.from,
+                flow.get(plot.id) ?? 0,
+              )
+            : grow(plot.crop, tick.weather, tick.to - tick.from);
     },
     snapshot: () => JSON.parse(JSON.stringify(state)) as typeof state,
     restore: (data: typeof state) => {

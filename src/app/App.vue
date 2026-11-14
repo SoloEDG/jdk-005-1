@@ -1,15 +1,17 @@
 <script setup lang="ts">
-import { ref, onUnmounted } from "vue";
+import { ref, computed, onUnmounted } from "vue";
 import { ClockPanel, weatherAt } from "../features/clock";
 import { FarmScene, FieldsPanel } from "../features/fields";
 import { WarehousePanel } from "../features/warehouse";
 import { WorkshopPanel } from "../features/workshop";
 import { OrdersPanel, EconomyPanel } from "../features/orders";
+import { IrrigationPanel } from "../features/irrigation";
 import { createWorkspace } from "./workspace";
 const farm = createWorkspace(),
   active = ref(0),
   tab = ref("warehouse");
-const { clock, warehouse, fields, workshop, orders, engine, notices } = farm;
+const { clock, warehouse, fields, workshop, orders, irrigation, engine, notices } =
+  farm;
 const timer = setInterval(() => {
   if (!clock.state.paused) engine.advance(1);
 }, 1500);
@@ -17,6 +19,9 @@ onUnmounted(() => clearInterval(timer));
 function reset() {
   if (confirm("开始一座新农场？已保存的存档仍然保留。")) location.reload();
 }
+const irrEdit = computed(
+  () => irrigation.state.mode === "build" || irrigation.state.mode === "remove",
+);
 </script>
 <template>
   <div class="workspace">
@@ -59,12 +64,19 @@ function reset() {
         <div class="farm-column">
           <div class="scene-heading">
             <h2>我的小小农场</h2>
-            <span><i></i> 点击土地照料作物</span>
+            <span><i></i> {{ irrEdit ? "编辑模式：点击田格铺设/拆除渠网" : "点击土地照料作物" }}</span>
           </div>
           <FarmScene
             :plots="fields.state.plots"
             :weather="weatherAt(clock.state.hour)"
+            :nodes="irrigation.state.nodes"
+            :mode="irrigation.state.mode"
+            :selected="irrigation.state.selected"
+            :last-flow="irrigation.state.lastFlow"
+            :edit-mode="irrEdit"
             @plot="(id) => (active = id)"
+            @cell="(r, c) => irrigation.clickCell(r, c)"
+            @select="irrigation.selectCell"
           /><FieldsPanel
             :plots="fields.state.plots"
             :selected="fields.state.selected"
@@ -73,6 +85,32 @@ function reset() {
             @plant="(id) => fields.plant(id, clock.state.hour)"
             @water="fields.water"
             @harvest="fields.harvest"
+          />
+          <IrrigationPanel
+            :nodes="irrigation.state.nodes"
+            :materials="irrigation.state.materials"
+            :water="irrigation.state.water"
+            :capacity="irrigation.capacity()"
+            :flow-capacity="irrigation.flowCapacity()"
+            :stored-pumps="irrigation.state.storedPumps"
+            :pump-jobs="irrigation.state.pumpJobs"
+            :priority="irrigation.state.priority"
+            :plots="fields.state.plots"
+            :mode="irrigation.state.mode"
+            :build-type="irrigation.state.buildType"
+            :selected="irrigation.state.selected"
+            :last-flow="irrigation.state.lastFlow"
+            :hour="clock.state.hour"
+            :coins="orders.state.coins"
+            @set-mode="irrigation.setMode"
+            @set-build="irrigation.setBuildType"
+            @cell="irrigation.clickCell"
+            @buy="irrigation.buyMaterials"
+            @enqueue-pump="irrigation.enqueuePump(clock.state.hour)"
+            @claim-pump="irrigation.claimPump"
+            @install-pump="irrigation.installPump"
+            @uninstall-pump="irrigation.uninstallPump"
+            @move-priority="irrigation.movePriority"
           />
           <section class="activity">
             <span>农场手记</span>
@@ -124,7 +162,7 @@ function reset() {
           <div class="tip-card">
             <span>✦ 今日小贴士</span>
             <p>
-              雨天不用浇水，可以留些时间给工坊。<br />蓝莓能连续收获三次，记得照顾它。
+              雨水会汇入蓄水池，留到晴天自动浇地。<br />铺好渠记得连通蓄水池，水泵装在池上才输水。
             </p>
             <small>跟着季节的节奏，慢慢来就好。</small>
           </div>

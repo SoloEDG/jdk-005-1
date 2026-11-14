@@ -446,15 +446,17 @@ h1 {
   white-space: nowrap;
   text-shadow: 2px 2px #8e9f6a;
 }
-.field-grid {
+.field-stack {
   position: absolute;
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 6px;
   width: 47%;
   left: 29%;
   top: 175px;
   transform: skewY(-2deg);
+}
+.field-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
 }
 .plot {
   height: 46px;
@@ -894,5 +896,252 @@ progress {
   }
   .main-grid aside {
     margin-top: 10px;
+  }
+}
+
+/* ---------- 引水灌溉 ---------- */
+.irrigation-overlay {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  pointer-events: none;
+  z-index: 3;
+}
+.irrigation-overlay.editing {
+  pointer-events: auto;
+}
+.irr-cell {
+  position: relative;
+  padding: 0;
+  border-radius: 0;
+  border: 2px dashed transparent;
+  background: transparent;
+  min-height: 46px;
+}
+.irrigation-overlay.editing .irr-cell {
+  cursor: pointer;
+}
+.irr-cell.channel {
+  background: rgba(96, 158, 178, 0.55);
+  border: 2px solid #6fa6b8;
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.35);
+}
+.irr-cell.tank {
+  background: rgba(64, 118, 150, 0.72);
+  border: 2px solid #3f7aa0;
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.4);
+}
+.irr-cell .cell-mark {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #eaf6fb;
+  font-style: normal;
+  font-size: 16px;
+  text-shadow: 1px 1px #35607a;
+  pointer-events: none;
+}
+.irr-cell.offline {
+  filter: grayscale(0.8) opacity(0.55);
+}
+.irr-cell.online {
+  border-color: #d8f3ee;
+}
+.irr-cell.online.channel .cell-mark {
+  animation: water-flow 1.6s linear infinite;
+}
+@keyframes water-flow {
+  0% {
+    transform: translateX(-3px);
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(3px);
+    opacity: 0.6;
+  }
+}
+.irr-cell.selected {
+  outline: 2px solid #e8c75f;
+  outline-offset: 1px;
+}
+.irr-cell.cut-preview {
+  border-color: #d9705f;
+  background: rgba(217, 112, 95, 0.45);
+}
+.pump-badge,
+.cut-badge,
+.drop-badge {
+  position: absolute;
+  top: -8px;
+  right: -6px;
+  font-style: normal;
+  font-size: 9px;
+  border-radius: 8px;
+  padding: 1px 4px;
+  color: #fff;
+  z-index: 2;
+  pointer-events: none;
+}
+.pump-badge {
+  background: #5d7a8c;
+}
+.cut-badge {
+  background: #c15747;
+}
+.drop-badge {
+  background: #4f93b8;
+  top: auto;
+  bottom: -8px;
+  right: -4px;
+}
+.irrigation-panel {
+  padding: 19px 17px;
+}
+.irr-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.irr-stats > div {
+  background: #f4f7ec;
+  border: 1px solid #e3e8d6;
+  border-radius: 6px;
+  padding: 9px;
+}
+.irr-stats small {
+  display: block;
+  margin-bottom: 4px;
+}
+.irr-stats strong {
+  font-size: 12px;
+  color: #3f623e;
+}
+.irr-stats progress {
+  width: 100%;
+  height: 5px;
+  margin-top: 6px;
+}
+.irr-modes {
+  display: flex;
+  gap: 7px;
+  flex-wrap: wrap;
+}
+.irr-modes button {
+  font-size: 10px;
+  padding: 7px 10px;
+  flex: 1;
+}
+.irr-modes button.active {
+  background: #456e46;
+  color: #fff;
+  border-color: #456e46;
+}
+.cut-preview-box,
+.flow-report,
+.node-card {
+  margin-top: 12px;
+  border: 1px dashed #d9b3a8;
+  background: #fcf2ef;
+  border-radius: 6px;
+  padding: 10px 12px;
+  display: grid;
+  gap: 5px;
+}
+.flow-report {
+  border-color: #b9d2c8;
+  background: #eef6f2;
+}
+.node-card {
+  border-color: #cdd8bb;
+  background: #f6f9ef;
+}
+.node-actions {
+  display: flex;
+  gap: 7px;
+}
+.node-actions button,
+.buy-row button,
+.pump-shop-head button {
+  font-size: 10px;
+  padding: 6px 9px;
+}
+.pump-shop {
+  margin-top: 14px;
+  border-top: 1px dashed #e0e5d4;
+  padding-top: 12px;
+}
+.pump-shop-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.buy-row {
+  margin-top: 10px;
+}
+.priority-box {
+  margin-top: 16px;
+  border-top: 1px dashed #e0e5d4;
+  padding-top: 12px;
+}
+.priority-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 2px;
+  border-bottom: 1px solid #eff0e6;
+  font-size: 10px;
+}
+.priority-row.thirsty {
+  background: #f7faf0;
+}
+.priority-row > b {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #e4ecda;
+  color: #5c7a4e;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+}
+.prio-name {
+  flex: 1;
+}
+.prio-name small {
+  margin-left: 6px;
+}
+.prio-tag {
+  font-size: 9px;
+  color: #a0aa92;
+  border: 1px solid #dde3d0;
+  border-radius: 9px;
+  padding: 1px 7px;
+}
+.prio-tag.online {
+  color: #3f7a6a;
+  border-color: #9fc9bd;
+  background: #eaf5f1;
+}
+.prio-btns {
+  display: flex;
+  gap: 4px;
+}
+.prio-btns button {
+  padding: 2px 7px;
+  font-size: 10px;
+}
+@media (max-width: 760px) {
+  .irr-stats {
+    grid-template-columns: repeat(2, 1fr);
   }
 }

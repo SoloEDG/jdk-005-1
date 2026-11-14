@@ -57,4 +57,21 @@ export interface Tick {
   to: number;
   weather: Weather;
 }
+export type IrrigationNodeType = "tank" | "channel";
+export interface IrrigationNode {
+  id: string;
+  type: IrrigationNodeType;
+  r: number;
+  c: number;
+  pumps: number;
+}
+export type IrrigationMode = "build" | "remove" | "inspect";
+export interface IrrigationFlow {
+  distribution: ReadonlyMap<number, number>;
+  connected: readonly number[];
+  demand: number;
+  supplied: number;
+  rainGained: number;
+  shortfall: number;
+}
 export type Notice = (message: string) => void;
